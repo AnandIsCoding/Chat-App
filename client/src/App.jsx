@@ -11,8 +11,13 @@ const Notfound = lazy(() => import("./pages/Notfound"));
 function App() {
   const user = true;
 
+  // Function to disable the default context menu
+  const disableContextMenu = (event) => {
+    event.preventDefault();
+  };
+
   return (
-    <div>
+    <div onContextMenu={disableContextMenu}>
       {/* Wrap Routes inside Suspense for lazy loading */}
       <Suspense fallback={<div className="absolute top-0 left-0 bottom-0 right-0 bg-black flex justify-center items-center duration-[2s]"> <img src='./loader.gif' alt='loader' className="" />  </div>}>
         <Routes>
@@ -37,7 +42,7 @@ function App() {
             }
           />
           <Route
-            path="/chat/:chatId"
+            path="/chat/:_id"
             element={
               <ProtectmyRoute user={user}>
                 <Chat />
