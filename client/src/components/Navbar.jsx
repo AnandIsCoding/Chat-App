@@ -21,11 +21,6 @@ function Navbar() {
   }; 
 
 
-  const handleGroups = () => {
-    alert('Wait to handle group');
-  };
-
-
   const handlePromptSubmit = (event) => {
     event.preventDefault();
     console.log(prompt);
@@ -44,7 +39,7 @@ function Navbar() {
         <button onClick={()=>setShowcreategroup(prev => !prev)} aria-label="Create Group">
           <IoAddSharp size={26} className="font-bold" />
         </button>
-        <button onClick={handleGroups} aria-label="Groups">
+        <button  onClick={()=>navigate('/groups')} aria-label="Groups">
           <BsPeopleFill size={26} />
         </button>
         <button className="text-[red]" onClick={ () => setShownotification(prev => !prev) } aria-label="Notifications">

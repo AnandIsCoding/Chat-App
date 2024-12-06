@@ -50,7 +50,7 @@ function App() {
             }
           />
           <Route
-            path="/group"
+            path="/groups"
             element={
               <ProtectmyRoute user={user}>
                 <Groups />
