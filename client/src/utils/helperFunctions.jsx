@@ -25,7 +25,7 @@ export const fileFormat = (url) => {
     switch (typeofAttachment) {
       case 'image':
         return (
-          <a href={url} target='_blank' download={true} rel="noopener noreferrer">
+          <a href={url}  target='_blank' download={true} rel="noopener noreferrer">
           <img
             src={url}
             alt="file"
@@ -39,13 +39,13 @@ export const fileFormat = (url) => {
         return <audio src={url} controls />;
       case 'document':
         return (
-          <a href={url} target="_blank" rel="noopener noreferrer">
+          <a href={url} download={true} target="_blank" rel="noopener noreferrer">
             Download Document
           </a>
         );
       default:
         return (
-          <a href={url} target="_blank" rel="noopener noreferrer">
+          <a href={url} download={true} target="_blank" rel="noopener noreferrer">
             View File
           </a>
         );

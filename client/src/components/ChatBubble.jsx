@@ -34,6 +34,7 @@ function ChatBubble({ message, senderId, userId ,senderName, attachments}) {
             </div>
           );
         })}
+        
     
       </div>
     </div>

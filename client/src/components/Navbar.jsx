@@ -13,12 +13,26 @@ function Navbar() {
   const [showNotification, setShownotification] = useState(false)
   const [showCreategroup, setShowcreategroup] = useState(false)
   const navigate = useNavigate()
-
   const [prompt, setPrompt] = useState('');
 
   const handleLogout = () => {
     alert('Wait to logout');
   }; 
+  const handlesearchbar = () =>{
+    setShowSearchbar((prev) => !prev)
+    setShowcreategroup(false)
+    setShownotification(false)
+  }
+  const handlecreategroup = () =>{
+    setShowcreategroup(prev => !prev)
+    setShowSearchbar(false)
+    setShownotification(false)
+  }
+  const handleshownotification = () =>{
+    setShownotification(prev => !prev)
+    setShowSearchbar(false)
+    setShowcreategroup(false)
+  }
 
 
   const handlePromptSubmit = (event) => {
@@ -28,21 +42,21 @@ function Navbar() {
 
   return (
     <div className="w-full bg-[#202C33]  h-[10vh] px-4 py-4 flex justify-between">
-    <img src='https://cdn3d.iconscout.com/3d/premium/thumb/chat-3d-icon-download-in-png-blend-fbx-gltf-file-formats--messenger-logo-box-bubble-speech-chatting-app-communication-and-information-pack-network-icons-7845465.png?f=webp' alt='logo' className=' w-[15vw] h-[15vw] md:w-[4vw] md:h-[4vw] rounded-full absolute left-36 md:left-44 top-3 md:top-1' />
+    <img onClick={()=>navigate('/')} src='https://cdn3d.iconscout.com/3d/premium/thumb/chat-3d-icon-download-in-png-blend-fbx-gltf-file-formats--messenger-logo-box-bubble-speech-chatting-app-communication-and-information-pack-network-icons-7845465.png?f=webp' alt='logo' className='cursor-pointer w-[15vw] h-[15vw] md:w-[4vw] md:h-[4vw] rounded-full absolute left-36 md:left-44 top-3 md:top-1' />
       <h1 onClick={() => navigate('/')} className="block cursor-pointer text-2xl mt-2 md:mt-0 md:text-3xl font-semibold text-green-400 md:font-bold">
         Happy-Chat
       </h1>
       <div className="hidden md:flex items-center gap-7 text-white">
-        <button onClick={() => setShowSearchbar((prev) => !prev)} aria-label="Search">
+        <button onClick={handlesearchbar} aria-label="Search">
           <IoMdSearch size={26} />
         </button>
-        <button onClick={()=>setShowcreategroup(prev => !prev)} aria-label="Create Group">
+        <button onClick={handlecreategroup} aria-label="Create Group">
           <IoAddSharp size={26} className="font-bold" />
         </button>
         <button  onClick={()=>navigate('/groups')} aria-label="Groups">
           <BsPeopleFill size={26} />
         </button>
-        <button className="text-[red]" onClick={ () => setShownotification(prev => !prev) } aria-label="Notifications">
+        <button className="text-[red]" onClick={ handleshownotification } aria-label="Notifications">
           <FaBell size={26} />
         </button>
         <button onClick={handleLogout} aria-label="Logout">

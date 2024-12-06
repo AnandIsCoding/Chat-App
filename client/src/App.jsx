@@ -9,7 +9,7 @@ const Groups = lazy(() => import("./pages/Groups"));
 const Notfound = lazy(() => import("./pages/Notfound"));
 
 function App() {
-  const user = true;
+  const user = false;
 
   // Function to disable the default context menu
   const disableContextMenu = (event) => {
