@@ -3,7 +3,7 @@ import { notificationSampledata } from "../utils/data.js";
 
 function Notification({ setShownotification }) {
   return (
-    <div className="absolute border-2 shadow-2xl shadow-[black] border-black top-[20%] z-[999] right-0 left-0 w-[90vw] md:w-[64vw] lg:w-[38%] py-4 bg-white rounded-xl mx-auto flex flex-col px-4 duration-[2s]">
+    <div className="absolute border-2 shadow-2xl shadow-[black] border-black top-[20%] z-[999] right-0 left-0 w-[97%] md:w-[64vw] lg:w-[38%] py-4 bg-white rounded-xl mx-auto flex flex-col px-4 duration-[2s]">
       {/* Close button */}
       <div
         onClick={() => setShownotification((prev) => !prev)}
@@ -36,10 +36,10 @@ function Notification({ setShownotification }) {
 
             {/* Action buttons */}
             <div className="flex gap-2">
-              <button className="px-3 md:px-4 py-1 md:py-2 rounded-lg bg-[#126c12] text-white font-bold text-xs md:text-sm lg:text-base">
+              <button className="px-3 md:px-4 py-1 md:py-2 rounded-lg bg-[#126c12] text-white font-bold text-md md:text-sm lg:text-base">
                 Accept
               </button>
-              <button className="px-3 md:px-4 py-1 md:py-2 rounded-lg bg-[red] text-white font-bold text-xs md:text-sm lg:text-base">
+              <button className="px-3 md:px-4 py-1 md:py-2 rounded-lg bg-[red] text-white font-bold text-md md:text-sm lg:text-base">
                 Reject
               </button>
             </div>

@@ -1,10 +1,10 @@
 import mongoose from 'mongoose'
 const userSchema = mongoose.Schema({
-    userName:{
+    name:{
         type:String,
         required:true,
         minlength:[3, 'Name should contain minimum 3 characters'],
-        maxlength:[25,'Name cannot contain maximum 25 characters']
+        maxlength:[25,'Name cannot contain more than 25 characters']
     },
     email:{
         type:String,
@@ -13,14 +13,25 @@ const userSchema = mongoose.Schema({
     },
     password:{
         type:String,
-        minlength:[8, 'Password should contain minimum 8 characters'],
-        maxlength:[20,'Password cannot contain maximum 20 characters'],
+        minlength:[8, 'Password should contain less than 8 characters'],
         required:true,
         unique:true, 
     },
-    profilePic:{
+    // avatar:{
+    //     public_id:{
+    //         type:String,
+    //         required:true
+    //     },
+    //     url:{
+    //         type:String,
+    //         required:true
+    //     }
+    // },
+    bio:{
         type:String,
-        default: ''
+        minlength:[5, 'Bio should contain minimum 5 characters'],
+        maxlength:[50,'Bio cannot contain more than 50 characters'],
+        required:true
     }
 },{timeStamps:true})
 

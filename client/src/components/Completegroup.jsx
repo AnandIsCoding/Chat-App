@@ -46,7 +46,7 @@ function Completegroup() {
       </h1>
 
       {/* sidebar panel */}
-      <div className={`absolute min-h-screen ${openPanel ? 'w-[62%]' : 'w-[0%] '} bg-zinc-50 z-[999] top-0 duration-[0.5s] ease-in-out `} >
+      <div className={`absolute min-h-screen ${openPanel ? 'w-[62%]' : 'w-[0%] '}  z-[999] top-0 duration-[0.5s] ease-in-out `} >
         <Grouplist  />
       </div>
 

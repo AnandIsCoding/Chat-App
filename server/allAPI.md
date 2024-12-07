@@ -1,4 +1,4 @@
-signup
+signup   name, profilePic, email, password, bio
 login
 search users
 send request using socket io
