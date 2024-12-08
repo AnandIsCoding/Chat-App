@@ -181,3 +181,13 @@ export const userLogoutController = async(req,res) =>{
     return res.status(500).json({success:false, message:'Internal server error'})
   }
 }
+
+export const searchController = async(req,res)=>{
+  try{
+    const {prompt} = req.query
+    res.send(prompt)
+  }catch(error){
+    console.log('error in search controller =>> ', error)
+    res.status(500).json({success:false, message:'Internal Server Error'})
+  }
+}

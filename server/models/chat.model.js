@@ -1,26 +1,28 @@
-import mongoose from 'mongoose'
-const chatSchema = mongoose.Schema({
-    userName:{
-        type:String,
-        required:true,
-        minlength:[3, 'Name should contain minimum 3 characters'],
-        maxlength:[25,'Name cannot contain more than 25 characters']
+import mongoose from "mongoose";
+const chatSchema = mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
     },
-    groupChat:{
-        type:Boolean,
-        default:false
+    groupChat: {
+      type: Boolean,
+      default: false,
     },
-    creator:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:'User',
+    creator: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
-    members:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:'User',
-    }
-    
-},{timeStamps:true})
+    members: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+  },
+  { timestamps: true }
+);
 
-const chatModel = mongoose.model('Chat',chatSchema)
+const chatModel = mongoose.model("Chat", chatSchema);
 
-export default chatModel
+export default chatModel;

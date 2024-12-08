@@ -5,6 +5,7 @@ import cors from 'cors'
 import cookieParser from 'cookie-parser'
 
 import userRouter from './routes/user.routes.js'
+import chatRouter from './routes/chat.routes.js'
 
 dotenv.config()
 const app = express()
@@ -20,6 +21,7 @@ app.use(express.json()); // json data k liye
 
 //routes
 app.use('/api/v1/users', userRouter)
+app.use('/api/v1/chats', chatRouter)
 
 
 // Connect to mongoDb and server start

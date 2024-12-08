@@ -17,23 +17,23 @@ const userSchema = mongoose.Schema({
         required:true,
         unique:true, 
     },
-    // avatar:{
-    //     public_id:{
-    //         type:String,
-    //         required:true
-    //     },
-    //     url:{
-    //         type:String,
-    //         required:true
-    //     }
-    // },
+    avatar:{
+        public_id:{
+            type:String,
+            required:true
+        },
+        url:{
+            type:String,
+            required:true
+        }
+    },
     bio:{
         type:String,
         minlength:[5, 'Bio should contain minimum 5 characters'],
         maxlength:[50,'Bio cannot contain more than 50 characters'],
         required:true
     }
-},{timeStamps:true})
+},{timestamps:true})
 
 const userModel = mongoose.model('User',userSchema)
 
