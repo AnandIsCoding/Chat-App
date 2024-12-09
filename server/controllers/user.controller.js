@@ -1,6 +1,11 @@
 import bcrypt from "bcrypt";
 import userModel from "../models/user.model.js";
 import jwt from "jsonwebtoken";
+import chatModel from "../models/chat.model.js";
+import requestModel from '../models/request.model.js';
+import { emitEvent } from "../utils/helperfunctions.js";
+
+
 
 const cookieOptions = {
   maxAge: 15 * 24 * 60 * 60 * 1000,
@@ -184,10 +189,182 @@ export const userLogoutController = async(req,res) =>{
 
 export const searchController = async(req,res)=>{
   try{
-    const {prompt} = req.query
-    res.send(prompt)
+    const { prompt = "" } = req.query;
+
+  // Finding All my chats
+  const myChats = await chatModel.find({ groupChat: false, members: req.userId });
+
+  //  extracting All Users from my chats means friends or people I have chatted with
+  const allUsersFromMyChats = myChats.flatMap((chat) => chat.members);
+
+  // Finding all users except me and my friends
+  const allUsersExceptMeAndFriends = await userModel.find({
+    _id: { $nin: allUsersFromMyChats },
+    name: { $regex: prompt, $options: "i" },
+  });
+
+  // Modifying the response
+  const users = allUsersExceptMeAndFriends.map(({ _id, name, avatar }) => ({
+    _id,
+    name,
+    avatar: avatar.url,
+  }));
+
+  return res.status(200).json({
+    success: true,
+    users,
+  });
   }catch(error){
     console.log('error in search controller =>> ', error)
+    res.status(500).json({success:false, message:'Internal Server Error'})
+  }
+}
+
+
+export const sendFriendRequest = async(req,res) =>{
+  try {
+    const { userId } = req.body;
+
+    const request = await requestModel.findOne({
+      $or: [
+        { sender: req.userId, receiver: userId },
+        { sender: userId, receiver: req.userId },
+      ],
+    });
+  
+    if (request) return res.status(403).json({success:false, message:'Request already sent'})
+    await requestModel.create({
+      sender: req.userId,
+      receiver: userId,
+    });
+  
+    emitEvent(req, 'NEW_REQUEST', [userId]);
+  
+    return res.status(200).json({
+      success: true,
+      message: "Friend Request Sent",
+    });
+  } catch (error) {
+    console.log('Error in send friend request =>> ', error)
+    res.status(500).json({success:false, message:'Internal Server Error'})
+  }
+}
+
+export const acceptFriendRequest = async(req,res) =>{
+  try {
+    const { requestId, accept } = req.body;
+
+    const request = await requestModel.findById(requestId)
+      .populate("sender", "name")
+      .populate("receiver", "name");
+  
+    if (!request) return res.status(404).json({success:false, message:'Request not found'})
+  
+    if (request.receiver._id.toString() !== req.user.toString())
+      return res.status(404).json({success:false, message:'Not authorized to accept'})
+  
+  
+    if (!accept) {
+      await request.deleteOne();
+  
+      return res.status(200).json({
+        success: true,
+        message: "Friend Request Rejected",
+      });
+    }
+  
+    const members = [request.sender._id, request.receiver._id];
+  
+    await Promise.all([
+      chatModel.create({
+        members,
+        name: `${request.sender.name}-${request.receiver.name}`,
+      }),
+      request.deleteOne(),
+    ]);
+  
+    emitEvent(req, 'REFETCH_CHATS', members);
+  
+    return res.status(200).json({
+      success: true,
+      message: "Friend Request Accepted",
+      senderId: request.sender._id,
+    });
+  } catch (error) {
+    console.log('Error in accept friend request =>> ', error)
+    res.status(500).json({success:false, message:'Internal Server Error'})
+  }
+}
+
+
+export const getAllnotifications = async(req,res) =>{
+  try {
+    const requests = await requestModel.find({ receiver: req.userId }).populate(
+      "sender",
+      "name avatar"
+    );
+  
+    const allRequests = requests.map(({ _id, sender }) => ({
+      _id,
+      sender: {
+        _id: sender._id,
+        name: sender.name,
+        avatar: sender.avatar.url,
+      },
+    }));
+  
+    return res.status(200).json({
+      success: true,
+      allRequests,
+    });
+  } catch (error) {
+    console.log('Error in get notification controller =>> ', error)
+    res.status(500).json({success:false, message:'Internal Server Error'})
+  }
+}
+
+const getOtherMember = (members, userId) =>
+  members.find((member) => member._id.toString() !== userId.toString());
+
+
+export const getMyFriends = async(req,res) =>{
+  try {
+    const chatId = req.query.chatId;
+
+  const chats = await chatModel.find({
+    members: req.userId,
+    groupChat: false,
+  }).populate("members", "name avatar");
+
+  const friends = chats.map(({ members }) => {
+    const otherUser = getOtherMember(members, req.userId);
+
+    return {
+      _id: otherUser._id,
+      name: otherUser.name,
+      avatar: otherUser.avatar.url,
+    };
+  });
+
+  if (chatId) {
+    const chat = await chatModel.findById(chatId);
+
+    const availableFriends = friends.filter(
+      (friend) => !chat.members.includes(friend._id)
+    );
+
+    return res.status(200).json({
+      success: true,
+      friends: availableFriends,
+    });
+  } else {
+    return res.status(200).json({
+      success: true,
+      friends,
+    });
+  }
+  } catch (error) {
+    console.log('Error in get notification controller =>> ', error)
     res.status(500).json({success:false, message:'Internal Server Error'})
   }
 }

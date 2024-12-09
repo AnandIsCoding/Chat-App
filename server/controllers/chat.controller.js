@@ -1,6 +1,8 @@
 import chatModel from "../models/chat.model.js";
 import { emitEvent } from "../utils/helperfunctions.js";
 import userModel from '../models/user.model.js';
+import messageModel from '../models/message.model.js';
+import {uploadFilesToCloudinary, deletFilesFromCloudinary}  from '../utils/helperfunctions.js'
 
 export const createnewGroupController = async (req, res) => {
   try {
@@ -70,19 +72,19 @@ export const getMyChatsController = async (req, res) => {
     const chats = await chatModel
       .find({ members: req.userId })
       .populate("members", "name avatar");
-    const otherMembers = chats.map((chat) =>
-      chat.members.filter(
-        (member) => member._id.toString() !== req.userId.toString()
-      )
-    );
+    
     const transformedChats = chats.map(({ _id, name, members, groupChat }) => {
+      const otherMembers = members.filter(
+        (member) => member._id.toString() !== req.userId.toString()
+      );
+
       return {
         _id,
         groupChat,
         avatar: groupChat
-          ? members.slice(0, 3).map(({ avatar }) => avatar.url)
-          : [otherMembers.avatar.url],
-        name: groupChat ? name : otherMembers.name,
+          ? members.slice(0, 3).map(({ avatar }) => avatar?.url || null)
+          : otherMembers[0]?.avatar?.url || null,
+        name: groupChat ? name : otherMembers[0]?.name || "Unknown",
         members: members.reduce((prev, curr) => {
           if (curr._id.toString() !== req.userId.toString()) {
             prev.push(curr._id);
@@ -91,15 +93,17 @@ export const getMyChatsController = async (req, res) => {
         }, []),
       };
     });
+
     return res.status(200).json({
       success: true,
       chats: transformedChats,
     });
   } catch (error) {
-    console.log("error in getmychatscontroller =>> ", error);
-    res.status(500).json({ success: false, message: "Internal Server Error" });
+    console.log("error in getMyChatsController =>> ", error);
+    return res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
+
 
 export const addMembersinGroupController = async (req, res) => {
   try {
@@ -212,11 +216,241 @@ export const removememberfromGroup = async(req,res) =>{
 }
 
 
-export const leavegroup = async(req, res) =>{
+export const leavegroupController = async(req, res) =>{
     try {
-        
+      const chatId = req.params.id;
+      const chat = await chatModel.findById(chatId);
+      console.log(chatId)
+      if (!chat) return res.status(404).json({success:false, message:'Chat not found'})
+    
+      if (!chat.groupChat)
+        return res.status(403).json({success:false, message:'This is not a group chat'})
+    
+      const remainingMembers = chat.members.filter(
+        (member) => member.toString() !== req.userId.toString()
+      );
+    
+      if (remainingMembers.length < 3)
+        return res.status(403).json({success:false, message:'Group must have atleast 3 members'})
+    
+      if (chat.creator.toString() === req.userId.toString()) {
+        const randomElement = Math.floor(Math.random() * remainingMembers.length);
+        const newCreator = remainingMembers[randomElement];
+        chat.creator = newCreator;
+      }
+    
+      chat.members = remainingMembers;
+    
+      const [user] = await Promise.all([
+        userModel.findById(req.userId, "name"),
+        chat.save(),
+      ]);
+    
+      emitEvent(req, ALERT, chat.members, {
+        chatId,
+        message: `User ${user.name} has left the group`,
+      });
+    
+      return res.status(200).json({
+        success: true,
+        message: "Leave Group Successfully",
+      });
     } catch (error) {
         console.log('Error in leaving group =>> ', error)
         return res.status(500).json({success:false, message:'Internal Server Error'})
     }
+}
+
+export const attchmentController = async(req,res) =>{
+  try {
+    const {chatId} = req.body
+    const chat = await chatModel.findById(chatId)
+    const user = await userModel.findById(req.userId, "name")
+    if(!chat) return res.status(403).json({success:false, message:'Chat not found'})
+    const files=req.files || []
+    if(files.length < 1) return res.status(403).json({success:false, message:'Please provide attachments'})
+ 
+      const attachments = []
+      const messageForDb = {content:"" , attachments, sender:user._id, chat:chatId}
+      const messageforRealTime = {
+        ...messageForDb,
+        sender:{
+          _id:user._id,
+          name:user.name
+        }
+      }
+    
+    const message = await messageModel.create(messageForDb)
+
+      emitEvent(req, 'NEW_ATTACHMENT',chat.members, {
+        message:messageforRealTime,
+        chatId
+      })
+      
+      
+      emitEvent(req, 'NEW_MESSAGE_ALERT',chat.members, {chatId})
+
+      return res.status(200).json({success:false, message:'Attachments sent successfully'})
+
+      
+
+  } catch (error) {
+    console.log('error in message controller =>> ', error)
+    return res.status(500).json({success:false, message:'Internal server error'})
+  }
+}
+
+
+export const getChatDetailsController = (async (req, res) => {
+  try {
+    if (req.query.populate === "true") {
+      const chat = await chatModel.findById(req.params.id)
+        .populate("members", "name avatar")
+        .lean();
+  
+      if (!chat) return res.status(404).json({success:false, message:"Chat not found"})
+  
+      chat.members = chat.members.map(({ _id, name, avatar }) => ({
+        _id,
+        name,
+        avatar: avatar.url,
+      }));
+  
+      return res.status(200).json({
+        success: true,
+        chat,
+      });
+    } else {
+      const chat = await chatModel.findById(req.params.id);
+      if (!chat) return res.status(404).json({success:false, message:"Chat not found"})
+  
+      return res.status(200).json({
+        success: true,
+        chat,
+      });
+    }
+  } catch (error) {
+    console.log('error in get chat details =>> ', error)
+    res.status(500).json({success:false, message:'Internal Server Error'})
+  }
+});
+
+
+export const renameGroupController = async(req,res) =>{
+  try {
+    const chatId = req.params.id;
+    const { name } = req.body;
+    console.log(chatId)
+  
+    const chat = await chatModel.findById(chatId);
+  
+    if (!chat) return res.status(404).json({success:false, message:"Chat not found"})
+  
+    if (!chat.groupChat)
+      return res.status(404).json({success:false, message:"Not a Group Chat"})
+  
+    if (chat.creator.toString() !== req.userId.toString())
+      return  res.status(404).json({success:false, message:"Only admin allowedto rename group"})
+      
+    chat.name = name;
+  
+    await chat.save();
+  
+    emitEvent(req, 'REFETCH_CHATS', chat.members);
+  
+    return res.status(200).json({
+      success: true,
+      message: "Group renamed successfully",
+    });
+  } catch (error) {
+    console.log('error in renaming group =>> ', error)
+    res.status(500).json({success:false, message:'Internal Server Error'})
+  }
+}
+
+
+export const deleteChatController = async(req,res) =>{
+  try {
+    const chatId = req.params.id;
+
+  const chat = await chatModel.findById(chatId);
+
+  if (!chat) return res.status(404).json({success:false, message:'No chat found'})
+  const members = chat.members;
+
+  if (chat.groupChat && chat.creator.toString() !== req.userId.toString())
+    return res.status(404).json({success:false, message:'Only admin is allowed to delete'})
+
+  if (!chat.groupChat && !chat.members.includes(req.userId.toString())) {
+    return res.status(404).json({success:false, message:'Only admin is allowed to delete'})
+  }
+
+  //   Here we have to dete All Messages as well as attachments or files from cloudinary
+
+  const messagesWithAttachments = await messageModel.find({
+    chat: chatId,
+    attachments: { $exists: true, $ne: [] },
+  });
+
+  const public_ids = [];
+
+  messagesWithAttachments.forEach(({ attachments }) =>
+    attachments.forEach(({ public_id }) => public_ids.push(public_id))
+  );
+
+  await Promise.all([
+    deletFilesFromCloudinary(public_ids),
+    chat.deleteOne(),
+    Message.deleteMany({ chat: chatId }),
+  ]);
+
+  emitEvent(req, 'REFETCH_CHATS', members);
+
+  return res.status(200).json({
+    success: true,
+    message: "Chat deleted successfully",
+  });
+  } catch (error) {
+    console.log('error in deleting chat =>> ', error)
+  }
+}
+
+
+
+export const getMessageController = async(req,res) =>{
+  try {
+    const chatId = req.params.id;
+  const { page = 1 } = req.query;
+
+  const resultPerPage = 20;
+  const skip = (page - 1) * resultPerPage;
+
+  const chat = await chatModel.findById(chatId);
+
+  if (!chat) return res.status(404).json({success:false, message:'No chat found'})
+
+  if (!chat.members.includes(req.userId.toString()))
+    return res.status(404).json({success:false, message:'Only admin is allowed to delete'})
+
+  const [messages, totalMessagesCount] = await Promise.all([
+    messageModel.find({ chat: chatId })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(resultPerPage)
+      .populate("sender", "name")
+      .lean(),
+    messageModel.countDocuments({ chat: chatId }),
+  ]);
+
+  const totalPages = Math.ceil(totalMessagesCount / resultPerPage) || 0;
+
+  return res.status(200).json({
+    success: true,
+    messages: messages.reverse(),
+    totalPages,
+  });
+  } catch (error) {
+    console.log('error in get message controller =>> ',error)
+    res.status(500).json({success:false, message:'Internal Server Error'})
+  }
 }
