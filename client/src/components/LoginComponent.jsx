@@ -1,17 +1,46 @@
 import React, { useState } from 'react'
-
+import axios from 'axios'
+const backendServer = import.meta.env.VITE_BASE_URL;
+import {toast} from 'react-hot-toast'
+import { useNavigate } from 'react-router-dom';
+import {useDispatch} from 'react-redux'
+import { userExists, userNotExists } from "../redux/reducers/auth.js";
 function LoginComponent({setIsloggedin}) {
+  const navigate = useNavigate()
   const [showPassword, setShowpassword] = useState(false)
   const [email,setEmail] = useState('')
     const [password,setPassword] = useState('')
 
-    const handleLogin
-    = (event) =>{
-       event.preventDefault()       
-       console.log('email is : ', email)
-       console.log('password is : ', password)
-       
-   }
+    const dispatch =useDispatch()
+
+    const handleLogin = async (event) => {
+      event.preventDefault();
+     
+      try {
+        const response = await axios.post(`${backendServer}/api/v1/users/login`, {
+          email,
+          password,
+        },{withCredentials:true,
+          headers: { 'Content-Type': 'application/json' },
+        });
+    
+        if (response.data.success) {
+          toast.success(response.data.message || "Login successful!");
+          console.log(response.data.token)
+          localStorage.setItem('token', response.data.token) // Store the token in local storage
+          dispatch(userExists(true))
+          navigate('/'); // Redirect to the home page or dashboard
+        } else {
+          toast.error(response.data.message || "Login failed!");
+          console.log('Response:', response);
+        }
+      } catch (error) {
+        console.error('Error in login component =>', error);
+        const errorMessage = error.response?.data?.message || "An unexpected error occurred";
+        toast.error(errorMessage);
+      }
+    };
+    
   return (
     <div className='py-2 px-5 h-screen flex flex-col justify-between md:w-[35%] md:ml-auto md:mr-auto  md:m-5 md:rounded-xl bg-white md:h-[80vh] md:mt-20'>
     <div>     

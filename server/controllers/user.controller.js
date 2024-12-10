@@ -1,9 +1,11 @@
 import bcrypt from "bcrypt";
 import userModel from "../models/user.model.js";
 import jwt from "jsonwebtoken";
+
 import chatModel from "../models/chat.model.js";
 import requestModel from '../models/request.model.js';
-import { emitEvent } from "../utils/helperfunctions.js";
+import { emitEvent, uploadFilesToCloudinary } from "../utils/helperfunctions.js";
+
 
 
 
@@ -58,23 +60,41 @@ export const userSignupController = async (req, res) => {
         });
     }
 
+    const file = req.file;
+    if (!file) {
+      return res.status(403).json({ success: false, message: "User profile image is required" });
+    }
+
+    // Upload image to Cloudinary
+    const result = await uploadFilesToCloudinary([file]);
+   
+    if (!result || !result[0]) {
+      return res.status(500).json({ success: false, message: "Image upload failed" });
+    }
+
+    const avatar = {
+      public_id: result[0].public_id,
+      url: result[0].url,
+    };
+
     // Check if user already registered with the same email
     const userRegistered = await userModel.findOne({ email: email });
     if (userRegistered) {
       return res
         .status(403)
-        .json({ success: false, message: "Email already Registered" });
+        .json({ success: false, message: "Email already registered" });
     }
 
     // Hash password
-    const encryptedpassword = await bcrypt.hash(password, 10);
+    const encryptedPassword = await bcrypt.hash(password, 10);
 
     // Create new user
     const user = await userModel.create({
-      name: name,
-      email: email,
-      password: encryptedpassword,
-      bio: bio,
+      name,
+      email,
+      password: encryptedPassword,
+      bio,
+      avatar, // Avatar field with public_id and url
     });
 
     // Generate token
@@ -87,7 +107,7 @@ export const userSignupController = async (req, res) => {
       .cookie("token", token, cookieOptions)
       .json({
         success: true,
-        message: "User Registered successfully",
+        message: "User registered successfully",
         token,
         user,
       });
@@ -95,7 +115,7 @@ export const userSignupController = async (req, res) => {
     console.error(`Error: ${error.message}`);
     return res
       .status(500)
-      .json({ message: "Internal server error", success: false });
+      .json({ success: false, message: "Internal server error" });
   }
 };
 
@@ -148,6 +168,7 @@ export const userLoginController = async (req, res) => {
       .json({
         success: true,
         message: `Welcome back, ${userAvailable.name}`,
+        token:token,
         user: {
           id: userAvailable._id,
           name: userAvailable.name,
@@ -180,7 +201,8 @@ export const userProfileController = async(req, res) =>{
 
 export const userLogoutController = async(req,res) =>{
   try {
-    return res.status(200).cookie('token', '', {...cookieOptions, maxAge:0}).json({success:true, message:'User Logout Successfully'})
+    return  res.status(200).cookie('token', '', {...cookieOptions, maxAge:0}).json({success:true, message:'User Logout Successfully'})
+
   } catch (error) {
     console.log('error in llogout => ', error)
     return res.status(500).json({success:false, message:'Internal server error'})

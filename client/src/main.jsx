@@ -5,12 +5,16 @@ import App from './App.jsx'
 import { BrowserRouter } from "react-router-dom";
 import {Toaster} from 'react-hot-toast'
 import {HelmetProvider} from 'react-helmet-async'
+import {Provider} from 'react-redux'
+import store from './redux/store.js';
 
 createRoot(document.getElementById('root')).render(
-    <BrowserRouter>
+   <Provider store={store}>
+     <BrowserRouter>
     <Toaster />
       <HelmetProvider>
       <App />
       </HelmetProvider>
     </BrowserRouter>
+   </Provider>
 )

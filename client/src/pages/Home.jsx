@@ -1,19 +1,39 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import Chatlist from "../components/Chatlist";
 import Profile from "../components/Profile";
 import Completechat from "../components/Completechat";
-
+import axios from "axios";
+const backendServer = import.meta.env.VITE_BASE_URL;
 function Home() {
+  const [allChats, setAllChats] = useState(null);
+
+  useEffect(() => {
+    const fetchChats = async () => {
+      try {
+        const res = await axios.get(`${backendServer}/api/v1/chats/mychats`,{withCredentials:true});
+        if (res.data.success) {
+          setAllChats(res.data.chats);
+          
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    fetchChats();
+  }, []); // Empty dependency array to run the effect only once on component mount
+
+
   return (
     <div className="min-h-screen min-w-screen">
       <Navbar />
-
+{console.log(allChats)}
       <div className="fixed w-full h-[calc(100vh-10vh)] flex text-black 
  ">
         {/* First Div */}
         <div className="w-full md:w-[35%] h-full bg-black overflow-hidden ">
-          <Chatlist/>
+          <Chatlist allChats={allChats} />
         </div>
 
         {/* Second Div */}
@@ -23,7 +43,7 @@ function Home() {
 
         {/* Third Div */}
         <div className="hidden md:flex md:w-[25%] h-full text-white bg-black">
-          <Profile/>
+          <Profile />
         </div>
       </div>
     </div>

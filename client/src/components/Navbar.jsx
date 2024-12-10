@@ -7,17 +7,41 @@ import { IoAddSharp } from "react-icons/io5";
 import Notification from './Notification.';
 import Creategroup from './Creategroup';
 import {useNavigate} from 'react-router-dom'
-
+import { userExists, userNotExists } from "../redux/reducers/auth";
+import axios from 'axios';
+import toast from 'react-hot-toast';
+import { useDispatch } from 'react-redux';
+const backendServer = import.meta.env.VITE_BASE_URL;
 function Navbar() {
+  const dispatch = useDispatch()
   const [showSearchbar, setShowSearchbar] = useState(false);
   const [showNotification, setShownotification] = useState(false)
   const [showCreategroup, setShowcreategroup] = useState(false)
   const navigate = useNavigate()
   const [prompt, setPrompt] = useState('');
 
-  const handleLogout = () => {
-    alert('Wait to logout');
-  }; 
+  const handleLogout = async () => {
+    try {
+      const response = await axios.delete(`${backendServer}/api/v1/users/logout`, { withCredentials: true });
+  
+      if (response.data.success) {
+        toast.success('User logged out successfully');
+        dispatch(userNotExists());  // Reset the user state in Redux store
+      } else {
+        toast.error('Error during logout');
+      }
+    } catch (error) {
+      // Handle cases where the response is undefined or missing
+      if (error.response) {
+        toast.error(error.response.data.message || 'An error occurred during logout');
+      } else {
+        toast.error('Logout failed. Please try again.');
+      }
+  
+      console.error('Logout error:', error); // Log error for debugging
+    }
+  };
+  
   const handlesearchbar = () =>{
     setShowSearchbar((prev) => !prev)
     setShowcreategroup(false)
@@ -48,19 +72,19 @@ function Navbar() {
       </h1>
       <div className=" md:flex items-center  text-white pt-3 md:pt-0">
         <button onClick={handlesearchbar} aria-label="Search">
-          <IoMdSearch size={26} />
+          <IoMdSearch size={26}  />
         </button>
         <button onClick={handlecreategroup} aria-label="Create Group">
-          <IoAddSharp size={26} className="font-bold ml-1" />
+          <IoAddSharp size={26} className="font-bold ml-1   md:ml-4 md:mr-4" />
         </button>
         <button  onClick={()=>navigate('/groups')} aria-label="Groups">
-          <BsPeopleFill size={26} className="font-bold ml-1"/>
+          <BsPeopleFill size={26} className="font-bold ml-1 mdLml-4 md:mr-2"/>
         </button>
         <button className="text-[red]" onClick={ handleshownotification } aria-label="Notifications">
-          <FaBell size={26} className="font-bold ml-2" />
+          <FaBell size={26} className="font-bold ml-2 md:ml-4" />
         </button>
         <button onClick={handleLogout} aria-label="Logout">
-          <AiOutlineLogout size={26} className="font-bold ml-2"/>
+          <AiOutlineLogout size={26} className="font-bold ml-2 md:ml-4"/>
         </button>
       </div>
 

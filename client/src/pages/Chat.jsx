@@ -11,7 +11,7 @@ function Chat() {
     <div className="fixed w-full h-[calc(100vh-10vh)] flex text-black 
 ">
       {/* First Div */}
-      <div className=" hidden md:flex w-full md:w-[35%] h-full overflow-hidden bg-blue-200 ">
+      <div className=" hidden md:flex w-full md:w-[35%] h-full overflow-hidden bg-black">
         <Chatlist/>
       </div>
 

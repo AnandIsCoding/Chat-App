@@ -6,6 +6,7 @@ import cookieParser from 'cookie-parser'
 import { Server } from 'socket.io'
 import {createServer} from 'http'
 import { v4 as uuid } from "uuid";
+import {v2 as cloudinary} from 'cloudinary'
 
 import userRouter from './routes/user.routes.js'
 import chatRouter from './routes/chat.routes.js'
@@ -14,6 +15,13 @@ import messageModel from './models/message.model.js'
 import { getSockets } from './utils/helperfunctions.js'
 
 dotenv.config()
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+})
+
 const app = express()
 const server = createServer(app)
 const io = new Server(server,{})

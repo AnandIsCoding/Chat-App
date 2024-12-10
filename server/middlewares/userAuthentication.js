@@ -8,7 +8,7 @@ export const authenticateUser = (req,res,next) =>{
 
             req.userId = decodedData._id;
           
-            next();
+            return next();
     } catch (error) {
         console.log('Error in authenticate user middleware = > ', error)
         return res.status(500).json({success:false, message:'Internal server error'})       
