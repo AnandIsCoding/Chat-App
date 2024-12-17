@@ -99,7 +99,7 @@ function Navbar() {
  
 
   return (
-    <div className="w-full bg-[#202C33]  h-[10vh] px-2 md:px-4 py-4 flex justify-between">
+    <div className="w-full bg-[#202C33] h-[10vh] px-2 md:px-4 py-4 flex justify-between">
     <img onClick={()=>navigate('/')} src='https://cdn3d.iconscout.com/3d/premium/thumb/chat-3d-icon-download-in-png-blend-fbx-gltf-file-formats--messenger-logo-box-bubble-speech-chatting-app-communication-and-information-pack-network-icons-7845465.png?f=webp' alt='logo' className='cursor-pointer w-[15vw] h-[15vw] md:w-[4vw] md:h-[4vw] rounded-full absolute left-32 md:left-44 top-3 md:top-1' />
       <h1 onClick={() => navigate('/')} className="block cursor-pointer text-2xl mt-2 md:mt-0 md:text-3xl font-semibold text-green-400 md:font-bold">
         Happy-Chat
@@ -149,7 +149,7 @@ function Navbar() {
            
            <div
              key={item._id}
-             className=" mt-2 w-full h-[4rem] bg-white text-black text-lg rounded-xl active:bg-white duration-[0.5s] flex items-center flex-shrink-0 px-4 md:ml-2 cursor-pointer hover:bg-blue-200 gap-3 border-2 border-black justify-between "
+             className=" mt-2 overflow-y-hidden w-full h-[4rem] bg-white text-black text-lg rounded-xl active:bg-white duration-[0.5s] flex items-center flex-shrink-0 px-4 md:ml-2 cursor-pointer hover:bg-blue-200 gap-3 border-2 border-black justify-between "
            >        
              <div className="flex gap-2">
                <div className="w-[10vw] h-[10vw] md:w-[3vw] md:h-[3vw] rounded-full">

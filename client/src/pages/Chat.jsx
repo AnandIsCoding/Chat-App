@@ -6,7 +6,7 @@ import Completechat from '../components/Completechat';
 import { useSocket } from '../utils/Socket';
 function Chat() {
 
-  const socket = useSocket()
+  
   
 
   return (

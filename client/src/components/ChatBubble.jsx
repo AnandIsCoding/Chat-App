@@ -23,7 +23,7 @@ function ChatBubble({ message, senderId, userId ,senderName, attachments}) {
 
         {
           
-        attachments.length > 0 &&
+        attachments?.length > 0 &&
         attachments.map((attachment, index) => {
           const url = attachment.url;
           const filetype = fileFormat(url);

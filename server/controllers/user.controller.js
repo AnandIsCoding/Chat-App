@@ -189,7 +189,7 @@ export const userProfileController = async(req, res) =>{
       if(!user) return res.status(403).json({success:false,message:'Unauthorized access' })
       return res.status(200).json({success:true, user})
   } catch (error) {
-    console.log('error in profule controller = > ', error)
+    console.log('error in profile controller = > ', error)
     res.status(500).json({success:false, message:'Internal server error'})
   }
 }

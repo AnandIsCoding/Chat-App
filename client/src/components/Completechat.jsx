@@ -1,21 +1,110 @@
-import React, { useState } from "react";
+import React, { useEffect, useState, useCallback   } from "react";
 import { useParams } from "react-router-dom";
 import { IoMdSend } from "react-icons/io";
 import { IoAddSharp } from "react-icons/io5";
 import ChatBubble from "../components/ChatBubble";
-import { sampleMessagedata } from "../utils/data";
-
-
+import { useSocket } from "../utils/Socket";
+import axios from 'axios'
+import {toast} from 'react-hot-toast'
+import {useSelector} from 'react-redux'
+const backendServer = import.meta.env.VITE_BASE_URL;
 function Completechat() {
   const { _id } = useParams();
+  const socket = useSocket()
   const [message, setMessage] = useState("");
   const [showFileoptions, setShowFileoptions] = useState(false);
+  const [members, setMembers] = useState([])
+  const[chatId,setChatid]= useState('')
+  const user = useSelector(store => store.user)
+
+  const fetChatDetails = async (_id) => {
+    try {
+
+      const res = await axios.get(`${backendServer}/api/v1/chats/${_id}?populate=true`, { withCredentials: true });
+      if (res.data.success) {
+        setMembers(res.data.chat?.members || []);
+        setChatid(res.data.chat?._id || "");
+      } else {
+        console.error("Failed to fetch chat details:", res.data.message);
+      }
+    } catch (error) {
+      console.error("Error fetching chat details:", error);
+    }
+  };
+  
+  
+
+  useEffect(()=>{
+      fetChatDetails(_id)      
+  },[_id])
+  
+  const memberIds = members?.map(member => member._id);
+  
 
   // Handle message submission
   const handleMessagesubmit = () => {
-    console.log("message is: ", message);
+    if(message.trim().length < 1) toast.error('Message is empty')
+    socket.emit("NEW_MESSAGE", { chatId, members: memberIds, message });
+
     setMessage(""); // Clear the input after submitting
   };
+
+
+
+
+  const [messages, setMessages] = useState([]); // State for messages
+
+
+  const newMessagesListener = useCallback(
+    (data) => {
+      if (data.chatId !== chatId) return;
+
+      setMessages((prev) => [...prev, data.message]);
+      
+    },
+    [chatId]
+  );
+
+  
+
+
+  // const eventHandler = {
+  //   [ALERT]: alertListener,
+  //   ['NEW_MESSAGE']: newMessagesListener,
+  //    [START_TYPING]: startTypingListener,
+  //   [STOP_TYPING]: stopTypingListener,
+  // };
+
+useEffect(() => {
+  socket.on("NEW_MESSAGE", newMessagesListener);
+  // console.log('messages *** ',messages)
+  return () => {
+    socket.off("NEW_MESSAGE", newMessagesListener);
+  };
+}, [socket, chatId]);
+
+
+
+//chatId ko dependency array me dal k fetch krna h message aur map krna h
+const fetchAllchats = async() =>{
+  try {
+    const res=await axios.get(`${backendServer}/api/v1/chats/message/${chatId}`,{withCredentials:true})
+    // console.log('received id is ->> ',chatId)
+    if(res.data.success){
+      setMessages(res.data.messages)
+      // console.log(res)      
+    }else{
+      console.log(res.data.message)
+    }
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+useEffect(()=>{
+  fetchAllchats()  
+  
+},[chatId])
 
   return (
     <div className="py-2 h-full w-full bg-[#000000b4] border-r-4 border-l-4 border-[#2a3c44d6]">
@@ -29,17 +118,17 @@ function Completechat() {
       <div className="h-full w-full relative">
         {_id && (
           <div className="h-[90%] w-full text-lg font-bold text-white overflow-y-auto">
-            {sampleMessagedata.map((msg) => (
-              <ChatBubble
-                key={msg._id}
-                message={msg.content}
-                senderId={msg.sender._id}
-                user={msg}
-                userId = {msg._id}
-                senderName = {msg.sender.name}
-                attachments={msg.attachments}
-              />
-            ))}
+          {messages?.map((msg, index) => (
+  <ChatBubble
+    key={msg._id || index} // fallback to index if _id is not unique
+    message={msg.content}
+    senderId={msg.sender._id}
+    userId={user._id}
+    senderName={msg.sender.name}
+    attachments={msg.attachments}
+  />
+))}
+
           </div>
         )}
 

@@ -1,12 +1,11 @@
 import React from 'react'
-import {sampleData} from '../utils/data.js'
 import { NavLink } from 'react-router-dom'
 
 function Grouplist() {
   return (
     <div className="w-full  overflow-x-hidden h-full bg-black overflow-y-auto no-scrollbar  flex flex-col gap-2 bg-fit py-1 ">
     <div className="w-full min-h-[120%]  flex flex-col">
-    {sampleData
+    {/* {sampleData
       .map((item, index) => (
         <>
         <NavLink to={`?group=${item._id}`}
@@ -22,7 +21,7 @@ function Grouplist() {
         <div className="w-[90%] h-[1px]  ml-10 mt-1"></div>
         </>         
         
-      ))}
+      ))} */}
       
     </div>
   </div>

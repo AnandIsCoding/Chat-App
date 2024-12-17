@@ -2,6 +2,7 @@ import chatModel from "../models/chat.model.js";
 import { emitEvent } from "../utils/helperfunctions.js";
 import userModel from '../models/user.model.js';
 import messageModel from '../models/message.model.js';
+import mongoose from "mongoose";
 import {uploadFilesToCloudinary, deletFilesFromCloudinary}  from '../utils/helperfunctions.js'
 
 export const createnewGroupController = async (req, res) => {
@@ -301,39 +302,36 @@ export const attchmentController = async(req,res) =>{
 }
 
 
-export const getChatDetailsController = (async (req, res) => {
+export const getChatDetailsController = async (req, res) => {
   try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: "Invalid chat ID" });
+    }
+
+    const chat = req.query.populate === "true"
+      ? await chatModel.findById(id).populate("members", "name avatar").lean()
+      : await chatModel.findById(id);
+
+    if (!chat) {
+      return res.status(404).json({ success: false, message: "Chat not found" });
+    }
+
     if (req.query.populate === "true") {
-      const chat = await chatModel.findById(req.params.id)
-        .populate("members", "name avatar")
-        .lean();
-  
-      if (!chat) return res.status(404).json({success:false, message:"Chat not found"})
-  
       chat.members = chat.members.map(({ _id, name, avatar }) => ({
         _id,
         name,
         avatar: avatar.url,
       }));
-  
-      return res.status(200).json({
-        success: true,
-        chat,
-      });
-    } else {
-      const chat = await chatModel.findById(req.params.id);
-      if (!chat) return res.status(404).json({success:false, message:"Chat not found"})
-  
-      return res.status(200).json({
-        success: true,
-        chat,
-      });
     }
+
+    return res.status(200).json({ success: true, chat });
   } catch (error) {
-    console.log('error in get chat details =>> ', error)
-    res.status(500).json({success:false, message:'Internal Server Error'})
+    console.log("Error in get chat details =>>", error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
   }
-});
+};
+
 
 
 export const renameGroupController = async(req,res) =>{
@@ -429,8 +427,8 @@ export const getMessageController = async(req,res) =>{
 
   if (!chat) return res.status(404).json({success:false, message:'No chat found'})
 
-  if (!chat.members.includes(req.userId.toString()))
-    return res.status(404).json({success:false, message:'Only admin is allowed to delete'})
+  // if (!chat.members.includes(req.userId.toString()))
+  //   return res.status(404).json({success:false, message:'Only admin is allowed to delete'})
 
   const [messages, totalMessagesCount] = await Promise.all([
     messageModel.find({ chat: chatId })
@@ -445,6 +443,7 @@ export const getMessageController = async(req,res) =>{
   const totalPages = Math.ceil(totalMessagesCount / resultPerPage) || 0;
 
   return res.status(200).json({
+    message:"Messages fetched successfully",
     success: true,
     messages: messages.reverse(),
     totalPages,

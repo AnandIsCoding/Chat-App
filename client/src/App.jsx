@@ -28,7 +28,6 @@ function App() {
         if (res.data.success) {
           setLoggedinuserdetails(res.data.user);
           dispatch(addUser(res.data.user));
-          
           dispatch(userExists(true));
         }
       } catch (error) {

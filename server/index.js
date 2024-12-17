@@ -58,12 +58,12 @@ io.use((socket, next) => {
   });
 
 io.on('connection',(socket)=>{
-    console.log('User connected', socket.id);
+    // console.log('User connected', socket.id);
     //const user = socket.user;
     const user = socket.user
 
      userSocketIDs.set(user._id.toString(), socket.id);
-   console.log('user socketIds =>> ',userSocketIDs)
+  //  console.log('user socketIds =>> ',userSocketIDs)
     socket.on('NEW_MESSAGE', async ({ chatId, members, message }) => {
         const messageForRealTime = {
           content: message,
@@ -76,12 +76,7 @@ io.on('connection',(socket)=>{
           createdAt: new Date().toISOString(),
         };
     
-        const messageForDB = {
-          content: message,
-          sender: user._id,
-          chat: chatId,
-        };
-        console.log('new message ', messageForRealTime)
+       
     
         const membersSocket = getSockets(members);
         io.to(membersSocket).emit('NEW_MESSAGE', {
@@ -89,6 +84,17 @@ io.on('connection',(socket)=>{
           message: messageForRealTime,
         });
         io.to(membersSocket).emit('NEW_MESSAGE_ALERT', { chatId });
+
+        const messageForDB = {
+          content: message,
+          sender: user._id,
+          chat: chatId,
+        };
+        console.log('new message ', messageForRealTime)
+
+        // if(messageForRealTime){
+        //   console.log('message for realtime => ', messageForRealTime)
+        // }
     
         try {
           await messageModel.create(messageForDB);
@@ -141,3 +147,6 @@ connectToDatabase()
     console.log('Database connection failed')
     console.log('databse connection error : ',error)
 })
+
+
+export {userSocketIDs}
