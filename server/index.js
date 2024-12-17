@@ -13,7 +13,7 @@ import chatRouter from './routes/chat.routes.js'
 import messageModel from './models/message.model.js'
 
 import { getSockets } from './utils/helperfunctions.js'
-
+import socketAuthenticator from './middlewares/socketAuthentication.js'
 dotenv.config()
 
 cloudinary.config({
@@ -23,8 +23,16 @@ cloudinary.config({
 })
 
 const app = express()
+app.use(cookieParser())
 const server = createServer(app)
-const io = new Server(server,{})
+const io = new Server(server,{
+  cors: {
+    origin: 'http://localhost:5173', // Allow your frontend's origin
+    credentials: true, // Allow cookies and authorization headers
+  },
+  transports: ["websocket", "polling"], // Allow specific transport methods
+  methods:['GET','PUT','POST','DELETE']
+})
 const userSocketIDs = new Map();
 
 
@@ -32,7 +40,8 @@ app.use(cors({
     origin:'http://localhost:5173',
     credentials:true
 }))
-app.use(cookieParser())
+
+
 app.use(express.urlencoded({extended:true})) // form data k liye
 app.use(express.json()); // json data k liye
 
@@ -41,22 +50,20 @@ app.use('/api/v1/users', userRouter)
 app.use('/api/v1/chats', chatRouter)
 
 io.use((socket, next) => {
-    // cookieParser()(
-    //   socket.request,
-    //   socket.request.res,
-    //   async (err) => await socketAuthenticator(err, socket, next)
-    // );
+    cookieParser()(
+      socket.request,
+      socket.request.res,
+      async (err) => await socketAuthenticator(err, socket, next)
+    );
   });
 
 io.on('connection',(socket)=>{
     console.log('User connected', socket.id);
     //const user = socket.user;
-    const user = {
-        _id:"abcd",
-        "name":"Aluaa"
-    }
-     userSocketIDs.set(user._id.toString(), socket.id);
+    const user = socket.user
 
+     userSocketIDs.set(user._id.toString(), socket.id);
+   console.log('user socketIds =>> ',userSocketIDs)
     socket.on('NEW_MESSAGE', async ({ chatId, members, message }) => {
         const messageForRealTime = {
           content: message,
@@ -90,6 +97,7 @@ io.on('connection',(socket)=>{
         }
       });
 
+      
     socket.on('START_TYPING', ({ members, chatId }) => {
         const membersSockets = getSockets(members);
         socket.to(membersSockets).emit(START_TYPING, { chatId });
@@ -114,11 +122,11 @@ io.on('connection',(socket)=>{
         io.to(membersSocket).emit(ONLINE_USERS, Array.from(onlineUsers));
       });
     
-      socket.on("disconnect", () => {
-        userSocketIDs.delete(user._id.toString());
-        onlineUsers.delete(user._id.toString());
-        socket.broadcast.emit(ONLINE_USERS, Array.from(onlineUsers));
-      });
+      // socket.on("disconnect", () => {
+      //   userSocketIDs.delete(user._id.toString());
+      //   onlineUsers.delete(user._id.toString());
+      //   socket.broadcast.emit(ONLINE_USERS, Array.from(onlineUsers));
+      // });
 })
 
 // Connect to mongoDb and server start

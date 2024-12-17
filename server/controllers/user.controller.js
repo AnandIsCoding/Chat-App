@@ -169,12 +169,7 @@ export const userLoginController = async (req, res) => {
         success: true,
         message: `Welcome back, ${userAvailable.name}`,
         token:token,
-        user: {
-          id: userAvailable._id,
-          name: userAvailable.name,
-          email: userAvailable.email,
-          bio: userAvailable.bio,
-        },
+        user:userAvailable,
       });
   } catch (error) {
     console.error(`Error during login: ${error.message}`);
@@ -209,38 +204,42 @@ export const userLogoutController = async(req,res) =>{
   }
 }
 
-export const searchController = async(req,res)=>{
-  try{
+export const searchController = async (req, res) => {
+  try {
     const { prompt = "" } = req.query;
 
-  // Finding All my chats
-  const myChats = await chatModel.find({ groupChat: false, members: req.userId });
+    // Finding all my chats
+    const myChats = await chatModel.find({ groupChat: false, members: req.userId });
 
-  //  extracting All Users from my chats means friends or people I have chatted with
-  const allUsersFromMyChats = myChats.flatMap((chat) => chat.members);
+    // Extracting all users from my chats (means friends or people I have chatted with)
+    const allUsersFromMyChats = myChats.flatMap((chat) => chat.members);
 
-  // Finding all users except me and my friends
-  const allUsersExceptMeAndFriends = await userModel.find({
-    _id: { $nin: allUsersFromMyChats },
-    name: { $regex: prompt, $options: "i" },
-  });
+    // Ensure to exclude duplicates and add the current user ID to the exclusion list
+    const exclusionList = [...new Set([...allUsersFromMyChats, req.userId])];
 
-  // Modifying the response
-  const users = allUsersExceptMeAndFriends.map(({ _id, name, avatar }) => ({
-    _id,
-    name,
-    avatar: avatar.url,
-  }));
+    // Finding all users except me and my friends
+    const allUsersExceptMeAndFriends = await userModel.find({
+      _id: { $nin: exclusionList }, // Exclude friends and current user
+      name: { $regex: prompt, $options: "i" }, // Match names based on the prompt
+    });
 
-  return res.status(200).json({
-    success: true,
-    users,
-  });
-  }catch(error){
-    console.log('error in search controller =>> ', error)
-    res.status(500).json({success:false, message:'Internal Server Error'})
+    // Modifying the response
+    const users = allUsersExceptMeAndFriends.map(({ _id, name, avatar }) => ({
+      _id,
+      name,
+      avatar: avatar.url,
+    }));
+
+    return res.status(200).json({
+      success: true,
+      users,
+    });
+  } catch (error) {
+    console.log('Error in search controller =>> ', error);
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
-}
+};
+
 
 
 export const sendFriendRequest = async(req,res) =>{
@@ -282,7 +281,7 @@ export const acceptFriendRequest = async(req,res) =>{
   
     if (!request) return res.status(404).json({success:false, message:'Request not found'})
   
-    if (request.receiver._id.toString() !== req.user.toString())
+    if (request.receiver._id.toString() !== req.userId.toString())
       return res.status(404).json({success:false, message:'Not authorized to accept'})
   
   
@@ -321,9 +320,11 @@ export const acceptFriendRequest = async(req,res) =>{
 
 export const getAllnotifications = async(req,res) =>{
   try {
+       
+
     const requests = await requestModel.find({ receiver: req.userId }).populate(
       "sender",
-      "name avatar"
+      "_id name avatar "
     );
   
     const allRequests = requests.map(({ _id, sender }) => ({
@@ -337,7 +338,8 @@ export const getAllnotifications = async(req,res) =>{
   
     return res.status(200).json({
       success: true,
-      allRequests,
+      message:'Requests fetched successfully',
+      allRequests
     });
   } catch (error) {
     console.log('Error in get notification controller =>> ', error)
@@ -356,7 +358,7 @@ export const getMyFriends = async(req,res) =>{
   const chats = await chatModel.find({
     members: req.userId,
     groupChat: false,
-  }).populate("members", "name avatar");
+  }).populate("members", "name avatar _id");
 
   const friends = chats.map(({ members }) => {
     const otherUser = getOtherMember(members, req.userId);
@@ -381,7 +383,7 @@ export const getMyFriends = async(req,res) =>{
     });
   } else {
     return res.status(200).json({
-      success: true,
+      success: true,message:'Friends fetched successfully',
       friends,
     });
   }

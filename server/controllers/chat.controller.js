@@ -71,7 +71,7 @@ export const getMyChatsController = async (req, res) => {
   try {
     const chats = await chatModel
       .find({ members: req.userId })
-      .populate("members", "name avatar");
+      .populate("members", "name avatar _id");
     
     const transformedChats = chats.map(({ _id, name, members, groupChat }) => {
       const otherMembers = members.filter(
@@ -95,7 +95,7 @@ export const getMyChatsController = async (req, res) => {
     });
 
     return res.status(200).json({
-      success: true,
+      success: true,message:'Chats fetched successfully',
       chats: transformedChats,
     });
   } catch (error) {

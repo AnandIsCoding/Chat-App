@@ -14,7 +14,7 @@ userRouter.get('/profile',authenticateUser, userProfileController)
 userRouter.delete('/logout', userLogoutController)
 userRouter.get('/search', searchController)
 userRouter.put("/sendrequest", sendFriendRequest)
-userRouter.put("/acceptrequest",acceptFriendRequest)
+userRouter.post("/acceptrequest",acceptFriendRequest)
 userRouter.get('/notifications',getAllnotifications)
 userRouter.get('/myfriends', getMyFriends)
 

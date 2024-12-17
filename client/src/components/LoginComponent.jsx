@@ -5,6 +5,7 @@ import {toast} from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom';
 import {useDispatch} from 'react-redux'
 import { userExists, userNotExists } from "../redux/reducers/auth.js";
+import { addUser } from '../redux/slices/userSlice.js';
 function LoginComponent({setIsloggedin}) {
   const navigate = useNavigate()
   const [showPassword, setShowpassword] = useState(false)
@@ -26,8 +27,9 @@ function LoginComponent({setIsloggedin}) {
     
         if (response.data.success) {
           toast.success(response.data.message || "Login successful!");
-          console.log(response.data.token)
           localStorage.setItem('token', response.data.token) // Store the token in local storage
+          dispatch(addUser(response.data.user))          
+          console.log(response)
           dispatch(userExists(true))
           navigate('/'); // Redirect to the home page or dashboard
         } else {
@@ -35,6 +37,7 @@ function LoginComponent({setIsloggedin}) {
           console.log('Response:', response);
         }
       } catch (error) {
+        dispatch(userExists(false))
         console.error('Error in login component =>', error);
         const errorMessage = error.response?.data?.message || "An unexpected error occurred";
         toast.error(errorMessage);

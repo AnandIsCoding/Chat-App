@@ -24,7 +24,7 @@ function Creategroup({ setShowcreategroup }) {
     <div className="absolute border-2 shadow-2xl shadow-[black] border-black top-[15%] md:top-[10%] z-[999] right-0 left-0 w-[95%] py-2 bg-white rounded-xl duration-[1s] search md:w-[38%] mx-auto flex flex-col px-4">
       <div
         onClick={() => setShowcreategroup((prev) => !prev)}
-        className="cursor-pointer absolute right-1 top-2 w-[10vw] md:w-[3vw] h-[10px] md:h-[10px] rounded-full bg-black"
+        className="cursor-pointer absolute right-1 top-2 w-[10vw] md:w-[4vw] h-[15px] md:h-[14px] rounded-full bg-black"
       ></div>
       <h1 className="text-xl font-bold text-center">Create new Group</h1>
       <input

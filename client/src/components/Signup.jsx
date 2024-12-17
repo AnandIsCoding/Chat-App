@@ -3,6 +3,7 @@ import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import {useDispatch} from 'react-redux'
+import { addUser } from '../redux/slices/userSlice.js';
 import { userExists, userNotExists } from "../redux/reducers/auth.js";
 function Signup({ setIsloggedin }) {
   const navigate = useNavigate()
@@ -57,9 +58,10 @@ formData.append("avatar", profilePic); // Appending the selected file
       if (response.data.success) {
         toast.success(response.data.message || 'Signup successful!');
         console.log('Token:', response.data.token);
-  
+        dispatch(addUser(response.data.user))
         // Store token and set user state
         localStorage.setItem('token', response.data.token);
+
         dispatch(userExists(true)); // Assuming userExists updates login state
   
         // Redirect after successful signup

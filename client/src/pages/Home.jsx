@@ -33,7 +33,7 @@ function Home() {
  ">
         {/* First Div */}
         <div className="w-full md:w-[35%] h-full bg-black overflow-hidden ">
-          <Chatlist allChats={allChats} />
+          <Chatlist />
         </div>
 
         {/* Second Div */}

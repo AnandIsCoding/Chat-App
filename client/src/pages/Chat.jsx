@@ -3,7 +3,12 @@ import Navbar from "../components/Navbar";
 import Chatlist from "../components/Chatlist";
 import Profile from "../components/Profile";
 import Completechat from '../components/Completechat';
+import { useSocket } from '../utils/Socket';
 function Chat() {
+
+  const socket = useSocket()
+  
+
   return (
     <div className="min-h-screen min-w-screen">
     <Navbar />

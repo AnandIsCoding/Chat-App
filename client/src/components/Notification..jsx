@@ -1,7 +1,52 @@
-import React from "react";
-import { notificationSampledata } from "../utils/data.js";
-
+import React, { useEffect, useState } from "react";
+import axios from 'axios';
+import toast from 'react-hot-toast';
+const backendServer = import.meta.env.VITE_BASE_URL;
 function Notification({ setShownotification }) {
+  const [friendrequests, setFriendrequests] = useState([])
+  const fetchNotifications = async()=>{
+    try {
+      const res = await axios.get(`${backendServer}/api/v1/users/notifications`, {withCredentials:true})
+    if(res.data.success){
+      setFriendrequests(res.data.allRequests) 
+      toast.success(res.data.message)
+    }else{
+      console.log(res.data.message)
+      toast.error(res.data.message)
+    }
+    } catch (error) {
+      console.log('error in  fetching users in searchComponent ', error)
+    }
+  }
+  useEffect(()=>{
+    fetchNotifications()
+    console.log('friend requests =>> ',friendrequests)
+  },[])
+
+  const handleAcceptfriend = async (_id, accept) => {
+    try {
+      const res = await axios.post(`${backendServer}/api/v1/users/acceptrequest`, {requestId:_id, accept}, {withCredentials: true});
+      console.log('res of accept/reject =>> ', res);
+  
+      if (res.data.success) {
+        toast.success(res.data.message);
+      }
+  
+      // Use functional setState to ensure you are updating with the latest state
+      setFriendrequests((prevRequests) => 
+        prevRequests.filter((request) => request._id !== _id)
+      );
+    } catch (error) {
+      console.log('Error:', error);
+      toast.error(error?.response?.data?.message || 'Something went wrong');
+    }
+    
+  };
+  
+
+  
+  
+
   return (
     <div className="absolute border-2 shadow-2xl shadow-[black] border-black top-[20%] z-[999] right-0 left-0 w-[97%] md:w-[64vw] lg:w-[38%] py-4 bg-white rounded-xl mx-auto flex flex-col px-4 duration-[2s]">
       {/* Close button */}
@@ -12,9 +57,9 @@ function Notification({ setShownotification }) {
 
       {/* Header */}
       <h1 className="text-lg md:text-xl font-bold text-center">Notifications</h1>
-
+      {friendrequests?.length<1 && <h1 className="text-xl text-black font-semibold">You have not any Friend requests yet</h1>}
       {/* Notification items */}
-      {notificationSampledata.map((item, index) => {
+      {friendrequests?.map((item, index) => {
         return (
           <div
             key={item._id}
@@ -36,10 +81,10 @@ function Notification({ setShownotification }) {
 
             {/* Action buttons */}
             <div className="flex gap-2">
-              <button className="px-3 md:px-4 py-1 md:py-2 rounded-lg bg-[#126c12] text-white font-bold text-md md:text-sm lg:text-base">
+              <button onClick={()=> handleAcceptfriend(item._id, true)} className="px-3 md:px-4 py-1 md:py-2 rounded-lg bg-[#126c12] text-white font-bold text-md md:text-sm lg:text-base">
                 Accept
               </button>
-              <button className="px-3 md:px-4 py-1 md:py-2 rounded-lg bg-[red] text-white font-bold text-md md:text-sm lg:text-base">
+              <button onClick={()=> handleAcceptfriend(item._id, false)} className="px-3 md:px-4 py-1 md:py-2 rounded-lg bg-[red] text-white font-bold text-md md:text-sm lg:text-base">
                 Reject
               </button>
             </div>
