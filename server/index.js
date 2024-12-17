@@ -88,7 +88,7 @@ io.on("connection", (socket) => {
       sender: user._id,
       chat: chatId,
     };
-    console.log("new message ", messageForRealTime);
+    // console.log("new message ", messageForRealTime);
 
     // if(messageForRealTime){
     //   console.log('message for realtime => ', messageForRealTime)
