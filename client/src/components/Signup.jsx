@@ -6,6 +6,7 @@ import {useDispatch} from 'react-redux'
 import { addUser } from '../redux/slices/userSlice.js';
 import { userExists, userNotExists } from "../redux/reducers/auth.js";
 function Signup({ setIsloggedin }) {
+  const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
   const dispatch = useDispatch()
   const backendServer = import.meta.env.VITE_BASE_URL;
@@ -17,22 +18,28 @@ function Signup({ setIsloggedin }) {
   const [bio, setBio] = useState('');
 
   const handleSignup = async (event) => {
+    setLoading(true)
     event.preventDefault();
   
     // Validate inputs
     if (userName.trim().length < 3 || userName.trim().length > 25) {
-      return toast.error('Username must be between 3 and 25 characters.');
+      setLoading(false)
+      return toast.error('Username must be between 3 and 25 characters.');      
     }
     if (password.trim().length < 8 || password.trim().length > 20) {
+      setLoading(false)
       return toast.error('Password must be between 8 and 20 characters.');
     }
     if (bio.trim().length < 5 || bio.trim().length > 50) {
+      setLoading(false)
       return toast.error('Bio should contain between 5 and 50 characters.');
     }
     if (!email.includes('@') || !email.includes('.')) {
+      setLoading(false)
       return toast.error('Please enter a valid email address.');
     }
     if (!profilePic) {
+      setLoading(false)
       return toast.error('Please upload a valid profile picture.');
     }
   
@@ -63,17 +70,19 @@ formData.append("avatar", profilePic); // Appending the selected file
         localStorage.setItem('token', response.data.token);
 
         dispatch(userExists(true)); // Assuming userExists updates login state
-  
+        setLoading(false)
         // Redirect after successful signup
         navigate('/');
       } else {
         toast.error(response.data.message || 'Signup failed!');
         console.log('Response:', response);
+        setLoading(false)
       }
     } catch (error) {
       console.error('Error in signup component:', error);
       const errorMessage = error.response?.data?.message || 'An unexpected error occurred';
       toast.error(errorMessage);
+      setLoading(false)
     }
   };
   
@@ -152,6 +161,9 @@ formData.append("avatar", profilePic); // Appending the selected file
             autoComplete="true"
             placeholder="bio"
           />
+          {
+            loading && <h1 className='text-black font-bold text-lg m-5 duration-[1s]'>Wait ▄︻デ══━一💥</h1>
+          }
 
           <button
             onClick={(event) => handleSignup(event)}

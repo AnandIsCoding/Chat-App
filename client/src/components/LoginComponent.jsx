@@ -8,6 +8,7 @@ import { userExists, userNotExists } from "../redux/reducers/auth.js";
 import { addUser } from '../redux/slices/userSlice.js';
 function LoginComponent({setIsloggedin}) {
   const navigate = useNavigate()
+  const [loading, setLoading] = useState(false)
   const [showPassword, setShowpassword] = useState(false)
   const [email,setEmail] = useState('')
     const [password,setPassword] = useState('')
@@ -15,6 +16,7 @@ function LoginComponent({setIsloggedin}) {
     const dispatch =useDispatch()
 
     const handleLogin = async (event) => {
+      setLoading(true)
       event.preventDefault();
      
       try {
@@ -31,16 +33,19 @@ function LoginComponent({setIsloggedin}) {
           dispatch(addUser(response.data.user))          
           console.log(response)
           dispatch(userExists(true))
+          setLoading(false)
           navigate('/'); // Redirect to the home page or dashboard
         } else {
           toast.error(response.data.message || "Login failed!");
           console.log('Response:', response);
+          setLoading(false)
         }
       } catch (error) {
         dispatch(userExists(false))
         console.error('Error in login component =>', error);
         const errorMessage = error.response?.data?.message || "An unexpected error occurred";
         toast.error(errorMessage);
+        setLoading(false)
       }
     };
     
@@ -79,7 +84,9 @@ function LoginComponent({setIsloggedin}) {
          <p className='text-end text-lg mb-6 font-bold cursor-pointer ' onClick={() => setShowpassword(!showPassword)}>{showPassword ? 'Hide password' : 'show password'}</p>
 
         
-          
+         {
+            loading && <h1 className='text-black font-bold text-lg m-5 duration-[1s]'>Wait ▄︻デ══━一💥</h1>
+          }
         
 
         <button onClick={(event) => handleLogin(event)}

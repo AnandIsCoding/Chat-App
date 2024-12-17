@@ -2,7 +2,7 @@ import React, { lazy, Suspense, useEffect, useState } from "react";
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import ProtectmyRoute from "./utils/ProtectRoute";
 import axios from "axios";
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch, useSelector } from "react-redux";
 import { userExists, userNotExists } from "./redux/reducers/auth";
 import { addUser } from "./redux/slices/userSlice";
 import { useSocket, SocketProvider } from "./utils/Socket";
@@ -17,14 +17,16 @@ const Notfound = lazy(() => import("./pages/Notfound"));
 
 function App() {
   const dispatch = useDispatch();
-  const { user, isLoading } = useSelector(state => state.auth);
+  const { user, isLoading } = useSelector((state) => state.auth);
   const [loggedInUserdetails, setLoggedinuserdetails] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get(`${backendServer}/api/v1/users/profile`, { withCredentials: true });
+        const res = await axios.get(`${backendServer}/api/v1/users/profile`, {
+          withCredentials: true,
+        });
         if (res.data.success) {
           setLoggedinuserdetails(res.data.user);
           dispatch(addUser(res.data.user));
@@ -39,25 +41,24 @@ function App() {
   }, [dispatch, navigate]);
 
   // Using useSocket hook for socket management
-  const socket = useSocket();  // Get socket from context
-  
+  const socket = useSocket(); // Get socket from context
+
   useEffect(() => {
     if (socket) {
-      console.log('Socket is connected:  ', socket.connected);
-      console.log('socket in app => ', socket);
-  
+      //console.log("Socket is connected:  ", socket.connected);
+      //console.log("socket in app => ", socket);
+
       // Example: Listening for incoming messages
-      socket.on('message', (data) => {
-        console.log('Received message:', data);
+      socket.on("message", (data) => {
+        console.log("Received message:", data);
       });
-  
+
       // Cleanup
       return () => {
         // socket.off('message'); Clean up the event listener when the component unmounts
       };
     }
   }, [socket]);
-  
 
   // Function to disable the default context menu
   const disableContextMenu = (event) => {
@@ -74,7 +75,9 @@ function App() {
           </div>
         }
       >
-        <SocketProvider> {/* Wrap everything inside SocketProvider */}
+        <SocketProvider>
+          {" "}
+          {/* Wrap everything inside SocketProvider */}
           <Routes>
             <Route
               path="/"

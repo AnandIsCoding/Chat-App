@@ -28,7 +28,7 @@ function Home() {
   return (
     <div className="min-h-screen min-w-screen">
       <Navbar />
-{console.log(allChats)}
+{/* {console.log(allChats)} */}
       <div className="fixed w-full h-[calc(100vh-10vh)] flex text-black 
  ">
         {/* First Div */}
