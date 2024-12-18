@@ -25,8 +25,8 @@ export const SocketProvider = ({ children }) => {
   useEffect(() => {
     socket.on('connect', () => {
       console.log('Socket connected:', socket.connected); // Should print true if connected
-      //console.log('socket is =>>> ',socket)
-      //console.log('Socket id is =>> ', socket.id)
+      console.log('socket is =>>> ',socket)
+      console.log('Socket id is =>> ', socket.id)
     });
     
     // Cleanup the socket connection when the provider unmounts

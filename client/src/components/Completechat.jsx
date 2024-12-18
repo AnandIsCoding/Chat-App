@@ -42,7 +42,7 @@ function Completechat() {
 
   // Handle message submission
   const handleMessagesubmit = () => {
-    if (message.trim().length < 1) toast.error("Message is empty");
+    if (message.trim().length < 1) return toast.error("Message is empty");
     socket.emit("NEW_MESSAGE", { chatId, members: memberIds, message });
 
     setMessage(""); // Clear the input after submitting
@@ -83,7 +83,7 @@ function Completechat() {
       );
       // console.log('received id is ->> ',chatId)
       if (res.data.success) {
-        setMessages(res.data.messages);
+        setMessages((prevMessages) => [...prevMessages, ...res.data.messages]);
         // console.log(res)
       } else {
         console.log(res.data.message);
@@ -95,7 +95,15 @@ function Completechat() {
 
   useEffect(() => {
     fetchAllchats();
+    window.addEventListener('scroll',handleScroll)
+    return () => window.removeEventListener('scroll',handleScroll)
   }, [chatId]);
+
+  const handleScroll = () =>{
+    if(window.scrollY + window.innerHeight >= document.body.scrollHeight){
+      fetchAllchats();
+    }
+  }
 
   return (
     <div className="py-2 h-full w-full bg-[#000000b4] border-r-4 border-l-4 border-[#2a3c44d6]">
